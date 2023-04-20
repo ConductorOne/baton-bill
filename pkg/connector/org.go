@@ -140,7 +140,6 @@ func (o *organizationResourceType) Grants(ctx context.Context, resource *v2.Reso
 
 	var rv []*v2.Grant
 	for _, user := range users {
-
 		role, err := o.client.GetUserRoleProfile(ctx, user.RoleId)
 		if err != nil {
 			return nil, "", nil, err

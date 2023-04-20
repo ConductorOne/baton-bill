@@ -36,29 +36,12 @@ type Client struct {
 	Credentials
 }
 
-type LoginResponse struct {
-	BaseResponse[LoginData]
-}
-
-type UsersResponse struct {
-	BaseResponse[[]User]
-}
-
-type SessionDetailsResponse struct {
-	BaseResponse[SessionDetails]
-}
-
-type OrganizationsResponse struct {
-	BaseResponse[[]Organization]
-}
-
-type UserRoleProfileResponse struct {
-	BaseResponse[UserRoleProfile]
-}
-
-type UserRoleProfilesResponse struct {
-	BaseResponse[[]UserRoleProfile]
-}
+type LoginResponse = BaseResponse[LoginData]
+type UsersResponse = BaseResponse[[]User]
+type SessionDetailsResponse = BaseResponse[SessionDetails]
+type OrganizationsResponse = BaseResponse[[]Organization]
+type UserRoleProfileResponse = BaseResponse[UserRoleProfile]
+type UserRoleProfilesResponse = BaseResponse[[]UserRoleProfile]
 
 type UserParams struct {
 	PaginationParams
@@ -85,7 +68,7 @@ func (c *Client) Login(ctx context.Context, organizationId string) error {
 		return err
 	}
 
-	if loginResponse.Status == 1 || loginResponse.Message == "Error" {
+	if IsInvalidResponse(loginResponse) {
 		return status.Error(400, "Request failed")
 	}
 
@@ -118,7 +101,7 @@ func (c *Client) GetOrganizations(ctx context.Context) ([]Organization, error) {
 		return nil, err
 	}
 
-	if organizationsResponse.Status == 1 || organizationsResponse.Message == "Error" {
+	if IsInvalidResponse(organizationsResponse) {
 		return nil, status.Error(400, "Request failed")
 	}
 
@@ -145,7 +128,7 @@ func (c *Client) GetSessionDetails(ctx context.Context) (SessionDetails, error) 
 		return SessionDetails{}, err
 	}
 
-	if sessionDetailsResponse.Status == 1 || sessionDetailsResponse.Message == "Error" {
+	if IsInvalidResponse(sessionDetailsResponse) {
 		return SessionDetails{}, status.Error(400, "Request failed")
 	}
 
@@ -172,7 +155,7 @@ func (c *Client) GetUsers(ctx context.Context, getUsersVars PaginationParams) ([
 		return nil, 0, err
 	}
 
-	if usersResponse.Status == 1 || usersResponse.Message == "Error" {
+	if IsInvalidResponse(usersResponse) {
 		return nil, 0, status.Error(400, "Request failed")
 	}
 
@@ -199,14 +182,14 @@ func (c *Client) GetUserRoleProfiles(ctx context.Context, getUserRoleProfilesVar
 		return nil, 0, err
 	}
 
-	if userRoleProfilesResponse.Status == 1 || userRoleProfilesResponse.Message == "Error" {
+	if IsInvalidResponse(userRoleProfilesResponse) {
 		return nil, 0, status.Error(400, "Request failed")
 	}
 
 	return userRoleProfilesResponse.Data, getUserRoleProfilesVars.Start + getUserRoleProfilesVars.Max, nil
 }
 
-// GetUserRoleProfile returns detail information about the user role under provided id
+// GetUserRoleProfile returns detail information about the user role under provided id.
 func (c *Client) GetUserRoleProfile(ctx context.Context, roleId string) (UserRoleProfile, error) {
 	var userRoleProfileResponse UserRoleProfileResponse
 
@@ -226,7 +209,7 @@ func (c *Client) GetUserRoleProfile(ctx context.Context, roleId string) (UserRol
 		return UserRoleProfile{}, err
 	}
 
-	if userRoleProfileResponse.Status == 1 || userRoleProfileResponse.Message == "Error" {
+	if IsInvalidResponse(userRoleProfileResponse) {
 		return UserRoleProfile{}, status.Error(400, "Request failed")
 	}
 
@@ -343,4 +326,8 @@ func (searchParams SearchParams) Apply(body *url.Values) {
 	}
 
 	// TODO: add filtering and sorting?
+}
+
+func IsInvalidResponse[T any](response BaseResponse[T]) bool {
+	return response.Status == 1 || response.Message == "Error"
 }

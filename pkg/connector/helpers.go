@@ -31,7 +31,7 @@ func parsePageToken(i string, resourceID *v2.ResourceId) (*pagination.Bag, error
 func handlePageToken(token *pagination.Token) (int, error) {
 	bag, err := parsePageToken(token.Token, &v2.ResourceId{ResourceType: resourceTypeUser.Id})
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	page, err := strconv.Atoi(bag.PageToken())
