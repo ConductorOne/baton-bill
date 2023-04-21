@@ -20,6 +20,7 @@ const UsersBaseURL = BaseURL + "/List/User.json"
 const OrganizationsBaseURL = BaseURL + "/ListOrgs.json"
 const UserRoleProfileBaseURL = BaseURL + "/Crud/Read/Profile.json"
 const UserRoleProfilesBaseURL = BaseURL + "/List/Profile.json"
+const UserRolePermissionsBaseURL = BaseURL + "/GetProfilePermissions.json"
 const ApiSessionBaseURL = BaseURL + "/GetSessionInfo.json"
 
 type Credentials struct {
@@ -41,6 +42,7 @@ type SessionDetailsResponse = BaseResponse[SessionDetails]
 type OrganizationsResponse = BaseResponse[[]Organization]
 type UserRoleProfileResponse = BaseResponse[UserRoleProfile]
 type UserRoleProfilesResponse = BaseResponse[[]UserRoleProfile]
+type UserRolePermissionsResponse = BaseResponse[map[string]bool]
 
 type UserParams struct {
 	PaginationParams
@@ -213,6 +215,33 @@ func (c *Client) GetUserRoleProfile(ctx context.Context, roleId string) (UserRol
 	}
 
 	return userRoleProfileResponse.Data, nil
+}
+
+// GetUserRolePermissions returns map of permissions under the provided user role.
+func (c *Client) GetUserRolePermissions(ctx context.Context, roleId string) (map[string]bool, error) {
+	var userRolePermissionsResponse UserRolePermissionsResponse
+
+	err := c.doRequest(
+		ctx,
+		UserRolePermissionsBaseURL,
+		&userRolePermissionsResponse,
+		Credentials{
+			DeveloperKey: c.DeveloperKey,
+			SessionId:    c.SessionId,
+		},
+		nil,
+		SearchParams{Id: roleId},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if IsInvalidResponse(userRolePermissionsResponse) {
+		return nil, status.Error(400, "Request failed")
+	}
+
+	return userRolePermissionsResponse.Data, nil
 }
 
 func (c *Client) doRequest(
