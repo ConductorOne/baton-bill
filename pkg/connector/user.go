@@ -17,8 +17,8 @@ type userResourceType struct {
 	client       *bill.Client
 }
 
-func (o *userResourceType) ResourceType(_ context.Context) *v2.ResourceType {
-	return o.resourceType
+func (u *userResourceType) ResourceType(_ context.Context) *v2.ResourceType {
+	return u.resourceType
 }
 
 // Create a new connector resource for an Bill User.
@@ -48,7 +48,7 @@ func userResource(ctx context.Context, user *bill.User, parentResourceID *v2.Res
 	return resource, nil
 }
 
-func (o *userResourceType) List(ctx context.Context, parentId *v2.ResourceId, token *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
+func (u *userResourceType) List(ctx context.Context, parentId *v2.ResourceId, token *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
 	if parentId == nil {
 		return nil, "", nil, nil
 	}
@@ -58,7 +58,7 @@ func (o *userResourceType) List(ctx context.Context, parentId *v2.ResourceId, to
 		return nil, "", nil, err
 	}
 
-	users, nextPage, err := o.client.GetUsers(
+	users, nextPage, err := u.client.GetUsers(
 		ctx,
 		bill.PaginationParams{Max: ResourcesPageSize, Start: page},
 	)
@@ -81,11 +81,11 @@ func (o *userResourceType) List(ctx context.Context, parentId *v2.ResourceId, to
 	return rv, strconv.Itoa(nextPage), nil, nil
 }
 
-func (o *userResourceType) Entitlements(ctx context.Context, resource *v2.Resource, token *pagination.Token) ([]*v2.Entitlement, string, annotations.Annotations, error) {
+func (u *userResourceType) Entitlements(ctx context.Context, resource *v2.Resource, token *pagination.Token) ([]*v2.Entitlement, string, annotations.Annotations, error) {
 	return nil, "", nil, nil
 }
 
-func (o *userResourceType) Grants(ctx context.Context, resource *v2.Resource, token *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
+func (u *userResourceType) Grants(ctx context.Context, resource *v2.Resource, token *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
 	return nil, "", nil, nil
 }
 
