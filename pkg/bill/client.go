@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -21,6 +20,7 @@ const UsersBaseURL = BaseURL + "/List/User.json"
 const OrganizationsBaseURL = BaseURL + "/ListOrgs.json"
 const UserRoleProfileBaseURL = BaseURL + "/Crud/Read/Profile.json"
 const UserRoleProfilesBaseURL = BaseURL + "/List/Profile.json"
+const UserRolePermissionsBaseURL = BaseURL + "/GetProfilePermissions.json"
 const ApiSessionBaseURL = BaseURL + "/GetSessionInfo.json"
 
 type Credentials struct {
@@ -42,6 +42,7 @@ type SessionDetailsResponse = BaseResponse[SessionDetails]
 type OrganizationsResponse = BaseResponse[[]Organization]
 type UserRoleProfileResponse = BaseResponse[UserRoleProfile]
 type UserRoleProfilesResponse = BaseResponse[[]UserRoleProfile]
+type UserRolePermissionsResponse = BaseResponse[map[string]bool]
 
 type UserParams struct {
 	PaginationParams
@@ -216,6 +217,33 @@ func (c *Client) GetUserRoleProfile(ctx context.Context, roleId string) (UserRol
 	return userRoleProfileResponse.Data, nil
 }
 
+// GetUserRolePermissions returns map of permissions under the provided user role.
+func (c *Client) GetUserRolePermissions(ctx context.Context, roleId string) (map[string]bool, error) {
+	var userRolePermissionsResponse UserRolePermissionsResponse
+
+	err := c.doRequest(
+		ctx,
+		UserRolePermissionsBaseURL,
+		&userRolePermissionsResponse,
+		Credentials{
+			DeveloperKey: c.DeveloperKey,
+			SessionId:    c.SessionId,
+		},
+		nil,
+		SearchParams{Id: roleId},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if IsInvalidResponse(userRolePermissionsResponse) {
+		return nil, status.Error(400, "Request failed")
+	}
+
+	return userRolePermissionsResponse.Data, nil
+}
+
 func (c *Client) doRequest(
 	ctx context.Context,
 	urlAddress string,
@@ -255,79 +283,4 @@ func (c *Client) doRequest(
 	}
 
 	return nil
-}
-
-// Method Apply for Credentials struct adds credentials to the request body.
-func (credentials Credentials) Apply(body *url.Values) {
-	// add username (required for login)
-	if credentials.Username != "" {
-		body.Set("userName", credentials.Username)
-	}
-
-	// add password (required for login)
-	if credentials.Password != "" {
-		body.Set("password", credentials.Password)
-	}
-
-	// add organization id (required for login)
-	if credentials.OrganizationId != "" {
-		body.Set("orgId", credentials.OrganizationId)
-	}
-
-	// add developer key (required for login)
-	if credentials.DeveloperKey != "" {
-		body.Set("devKey", credentials.DeveloperKey)
-	}
-
-	// add session id
-	if credentials.SessionId != "" {
-		body.Set("sessionId", credentials.SessionId)
-	}
-}
-
-// Method Apply for PaginationParams struct adds pagination parameters to the request body.
-func (pagination PaginationParams) Apply(body *url.Values) {
-	data := url.Values{}
-
-	// add max reference
-	if pagination.Max != 0 {
-		data.Set("max", strconv.Itoa(pagination.Max))
-	}
-
-	// add start reference
-	if pagination.Start != 0 {
-		data.Set("start", strconv.Itoa(pagination.Start))
-	}
-
-	body.Set("data", data.Encode())
-}
-
-// Method Apply for SearchParams struct adds search parameters (like id of the resource) to the request body.
-// In case of Bill.com API, it uses the data field to pass the search parameters as well as the pagination parameters
-// So this function handles both cases.
-func (searchParams SearchParams) Apply(body *url.Values) {
-	// add Id if provided
-	if searchParams.Id != "" {
-		// check if the data field is already set
-		if body.Has("data") {
-			data, err := url.ParseQuery(body.Get("data"))
-			if err != nil {
-				return
-			}
-
-			data.Set("id", searchParams.Id)
-			body.Set("data", data.Encode())
-		} else {
-			data := url.Values{}
-
-			data.Set("id", searchParams.Id)
-			body.Set("data", data.Encode())
-		}
-	}
-
-	// TODO: add filtering and sorting?
-}
-
-func IsInvalidResponse[T any](response BaseResponse[T]) bool {
-	return response.Status == 1 || response.Message == "Error"
 }

@@ -1,7 +1,5 @@
 package bill
 
-import "net/url"
-
 type BaseResource struct {
 	Id string `json:"id"`
 }
@@ -66,8 +64,4 @@ type SearchParams struct {
 	Sort      []Sort   `json:"sort"`
 	Nested    bool     `json:"nested"`
 	ShowAudit bool     `json:"showAudit"`
-}
-
-type RequestOption interface {
-	Apply(*url.Values)
 }
