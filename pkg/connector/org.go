@@ -131,10 +131,10 @@ func (o *organizationResourceType) Grants(ctx context.Context, resource *v2.Reso
 	return rv, strconv.Itoa(nextPage), nil, nil
 }
 
-func organizationBuilder(client *bill.Client, organizationIds []string) *organizationResourceType {
+func organizationBuilder(client *bill.Client, organizationIDs []string) *organizationResourceType {
 	orgsMap := make(map[string]*bill.Organization)
 
-	for _, orgId := range organizationIds {
+	for _, orgId := range organizationIDs {
 		orgsMap[orgId] = &bill.Organization{}
 	}
 

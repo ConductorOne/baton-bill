@@ -61,7 +61,7 @@ func (c *Client) Login(ctx context.Context, organizationId string) error {
 	var loginResponse LoginResponse
 
 	// Setup required organization id for client
-	c.Credentials.OrganizationId = organizationId
+	c.OrganizationId = organizationId
 
 	err := c.doRequest(ctx, UsersBaseURL, &loginResponse, c.Credentials, nil, nil)
 
@@ -74,8 +74,8 @@ func (c *Client) Login(ctx context.Context, organizationId string) error {
 	}
 
 	// modify the client credentials to involve new session id and organization id
-	c.Credentials.SessionId = loginResponse.Data.SessionId
-	c.Credentials.OrganizationId = loginResponse.Data.OrgId
+	c.SessionId = loginResponse.Data.SessionId
+	c.OrganizationId = loginResponse.Data.OrgId
 
 	return nil
 }
@@ -273,7 +273,7 @@ func (c *Client) doRequest(
 	defer rawResponse.Body.Close()
 
 	if rawResponse.StatusCode >= 300 {
-		return status.Error(codes.Code(rawResponse.StatusCode), "Request failed")
+		return status.Error(codes.Code(uint32(rawResponse.StatusCode)), "Request failed") //nolint:gosec // StatusCode is always valid HTTP code
 	}
 
 	// TODO: check if this works because in case of error, the users in data field
