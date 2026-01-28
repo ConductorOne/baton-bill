@@ -7,9 +7,10 @@ import (
 
 	"github.com/ConductorOne/baton-bill/pkg/bill"
 	"github.com/ConductorOne/baton-bill/pkg/connector"
-	"github.com/conductorone/baton-sdk/pkg/cli"
+	cfg "github.com/ConductorOne/baton-bill/pkg/config"
+	"github.com/conductorone/baton-sdk/pkg/config"
 	"github.com/conductorone/baton-sdk/pkg/connectorbuilder"
-	"github.com/conductorone/baton-sdk/pkg/sdk"
+	"github.com/conductorone/baton-sdk/pkg/connectorrunner"
 	"github.com/conductorone/baton-sdk/pkg/types"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
@@ -20,15 +21,19 @@ var version = "dev"
 func main() {
 	ctx := context.Background()
 
-	cfg := &config{}
-	cmd, err := cli.NewCmd(ctx, "baton-bill", cfg, validateConfig, getConnector, run)
+	_, cmd, err := config.DefineConfiguration(
+		ctx,
+		"baton-bill",
+		getConnector,
+		cfg.Config,
+		connectorrunner.WithDefaultCapabilitiesConnectorBuilder(&connector.Bill{}),
+	)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 
 	cmd.Version = version
-	cmdFlags(cmd)
 
 	err = cmd.Execute()
 	if err != nil {
@@ -37,16 +42,16 @@ func main() {
 	}
 }
 
-func getConnector(ctx context.Context, cfg *config) (types.ConnectorServer, error) {
+func getConnector(ctx context.Context, c *cfg.Bill) (types.ConnectorServer, error) {
 	l := ctxzap.Extract(ctx)
 
 	billConnector, err := connector.New(
 		ctx,
-		cfg.OrganizationIds,
+		c.Organizationids,
 		bill.Credentials{
-			Username:     cfg.Username,
-			Password:     cfg.Password,
-			DeveloperKey: cfg.DeveloperKey,
+			Username:     c.Username,
+			Password:     c.Password,
+			DeveloperKey: c.Developerkey,
 		},
 	)
 	if err != nil {
@@ -54,37 +59,11 @@ func getConnector(ctx context.Context, cfg *config) (types.ConnectorServer, erro
 		return nil, err
 	}
 
-	connector, err := connectorbuilder.NewConnector(ctx, billConnector)
+	conn, err := connectorbuilder.NewConnector(ctx, billConnector)
 	if err != nil {
 		l.Error("error creating connector", zap.Error(err))
 		return nil, err
 	}
 
-	return connector, nil
-}
-
-// run is where the process of syncing with the connector is implemented.
-func run(ctx context.Context, cfg *config) error {
-	l := ctxzap.Extract(ctx)
-
-	c, err := getConnector(ctx, cfg)
-	if err != nil {
-		l.Error("error creating connector", zap.Error(err))
-		return err
-	}
-
-	r, err := sdk.NewConnectorRunner(ctx, c, cfg.C1zPath)
-	if err != nil {
-		l.Error("error creating connector runner", zap.Error(err))
-		return err
-	}
-	defer r.Close()
-
-	err = r.Run(ctx)
-	if err != nil {
-		l.Error("error running connector", zap.Error(err))
-		return err
-	}
-
-	return nil
+	return conn, nil
 }
