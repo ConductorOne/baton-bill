@@ -65,14 +65,14 @@ func (b *Bill) Validate(ctx context.Context) (annotations.Annotations, error) {
 }
 
 // New returns the Bill connector.
-func New(ctx context.Context, organizationIDs []string, credentials bill.Credentials) (*Bill, error) {
+func New(ctx context.Context, organizationIDs []string, credentials bill.Credentials, baseURL string) (*Bill, error) {
 	httpClient, err := uhttp.NewClient(ctx, uhttp.WithLogger(true, ctxzap.Extract(ctx)))
 
 	if err != nil {
 		return nil, err
 	}
 
-	billClient := bill.NewClient(httpClient, credentials)
+	billClient := bill.NewClient(httpClient, credentials, baseURL)
 
 	return &Bill{
 		client: billClient,

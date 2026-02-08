@@ -8,6 +8,7 @@ type Bill struct {
 	Password string `mapstructure:"password"`
 	Organizationids []string `mapstructure:"organizationIds"`
 	Developerkey string `mapstructure:"developerKey"`
+	BaseUrl string `mapstructure:"base-url"`
 }
 
 func (c *Bill) findFieldByTag(tagValue string) (any, bool) {

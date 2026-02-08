@@ -11,17 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const SandboxBaseURL = "https://api-sandbox.bill.com/api/v2"
-const BaseURL = "https://api.bill.com/api/v2"
-
-// usual format: <API_Base_URL>/Crud/<Operation>/<Entity>.json (Read more at https://developer.bill.com/docs/api-request-format)
-const LoginBaseURL = BaseURL + "/Login.json"
-const UsersBaseURL = BaseURL + "/List/User.json"
-const OrganizationsBaseURL = BaseURL + "/ListOrgs.json"
-const UserRoleProfileBaseURL = BaseURL + "/Crud/Read/Profile.json"
-const UserRoleProfilesBaseURL = BaseURL + "/List/Profile.json"
-const UserRolePermissionsBaseURL = BaseURL + "/GetProfilePermissions.json"
-const ApiSessionBaseURL = BaseURL + "/GetSessionInfo.json"
+const DefaultBaseURL = "https://api.bill.com/api/v2"
 
 type Credentials struct {
 	Username       string
@@ -33,7 +23,32 @@ type Credentials struct {
 
 type Client struct {
 	httpClient *http.Client
+	baseURL    string
 	Credentials
+}
+
+func (c *Client) loginURL() string {
+	return c.baseURL + "/Login.json"
+}
+
+func (c *Client) usersURL() string {
+	return c.baseURL + "/List/User.json"
+}
+
+func (c *Client) organizationsURL() string {
+	return c.baseURL + "/ListOrgs.json"
+}
+
+func (c *Client) userRoleProfileURL() string {
+	return c.baseURL + "/Crud/Read/Profile.json"
+}
+
+func (c *Client) userRoleProfilesURL() string {
+	return c.baseURL + "/List/Profile.json"
+}
+
+func (c *Client) userRolePermissionsURL() string {
+	return c.baseURL + "/GetProfilePermissions.json"
 }
 
 type LoginResponse = BaseResponse[LoginData]
@@ -49,9 +64,13 @@ type UserParams struct {
 	SearchParams
 }
 
-func NewClient(httpClient *http.Client, credentials Credentials) *Client {
+func NewClient(httpClient *http.Client, credentials Credentials, baseURL string) *Client {
+	if baseURL == "" {
+		baseURL = DefaultBaseURL
+	}
 	return &Client{
 		httpClient:  httpClient,
+		baseURL:     baseURL,
 		Credentials: credentials,
 	}
 }
@@ -63,7 +82,7 @@ func (c *Client) Login(ctx context.Context, organizationId string) error {
 	// Setup required organization id for client
 	c.OrganizationId = organizationId
 
-	err := c.doRequest(ctx, UsersBaseURL, &loginResponse, c.Credentials, nil, nil)
+	err := c.doRequest(ctx, c.usersURL(), &loginResponse, c.Credentials, nil, nil)
 
 	if err != nil {
 		return err
@@ -87,7 +106,7 @@ func (c *Client) GetOrganizations(ctx context.Context) ([]Organization, error) {
 
 	err := c.doRequest(
 		ctx,
-		OrganizationsBaseURL,
+		c.organizationsURL(),
 		&organizationsResponse,
 		Credentials{
 			DeveloperKey: c.DeveloperKey,
@@ -115,7 +134,7 @@ func (c *Client) GetSessionDetails(ctx context.Context) (SessionDetails, error) 
 
 	err := c.doRequest(
 		ctx,
-		UsersBaseURL,
+		c.usersURL(),
 		&sessionDetailsResponse,
 		Credentials{
 			DeveloperKey: c.DeveloperKey,
@@ -142,7 +161,7 @@ func (c *Client) GetUsers(ctx context.Context, getUsersVars PaginationParams) ([
 
 	err := c.doRequest(
 		ctx,
-		UsersBaseURL,
+		c.usersURL(),
 		&usersResponse,
 		Credentials{
 			DeveloperKey: c.DeveloperKey,
@@ -169,7 +188,7 @@ func (c *Client) GetUserRoleProfiles(ctx context.Context, getUserRoleProfilesVar
 
 	err := c.doRequest(
 		ctx,
-		UserRoleProfilesBaseURL,
+		c.userRoleProfilesURL(),
 		&userRoleProfilesResponse,
 		Credentials{
 			DeveloperKey: c.DeveloperKey,
@@ -196,7 +215,7 @@ func (c *Client) GetUserRoleProfile(ctx context.Context, roleId string) (UserRol
 
 	err := c.doRequest(
 		ctx,
-		UserRoleProfileBaseURL,
+		c.userRoleProfileURL(),
 		&userRoleProfileResponse,
 		Credentials{
 			DeveloperKey: c.DeveloperKey,
@@ -223,7 +242,7 @@ func (c *Client) GetUserRolePermissions(ctx context.Context, roleId string) (map
 
 	err := c.doRequest(
 		ctx,
-		UserRolePermissionsBaseURL,
+		c.userRolePermissionsURL(),
 		&userRolePermissionsResponse,
 		Credentials{
 			DeveloperKey: c.DeveloperKey,
