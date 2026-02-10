@@ -1,6 +1,6 @@
 ![Baton Logo](./docs/images/baton-logo.png)
 
-# `baton-bill` [![Go Reference](https://pkg.go.dev/badge/github.com/conductorone/baton-bill.svg)](https://pkg.go.dev/github.com/conductorone/baton-bill) ![main ci](https://github.com/conductorone/baton-bill/actions/workflows/main.yaml/badge.svg)
+# `baton-bill` [![Go Reference](https://pkg.go.dev/badge/github.com/conductorone/baton-bill.svg)](https://pkg.go.dev/github.com/conductorone/baton-bill) ![verify](https://github.com/conductorone/baton-bill/actions/workflows/verify.yaml/badge.svg)
 
 `baton-bill` is a connector for Bill.com built using the [Baton SDK](https://github.com/conductorone/baton-sdk). It communicates with the Bill.com API to sync data about which users have access to various entities and organizations.
 
