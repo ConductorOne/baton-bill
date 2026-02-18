@@ -34,6 +34,7 @@ var (
 		"base-url",
 		field.WithDescription("Override the Bill API URL (for testing)"),
 		field.WithHidden(true),
+		field.WithExportTarget(field.ExportTargetCLIOnly),
 	)
 )
 
