@@ -27,10 +27,6 @@ type Client struct {
 	Credentials
 }
 
-func (c *Client) loginURL() string {
-	return c.baseURL + "/Login.json"
-}
-
 func (c *Client) usersURL() string {
 	return c.baseURL + "/List/User.json"
 }
