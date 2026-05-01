@@ -53,6 +53,7 @@ func getConnector(ctx context.Context, c *cfg.Bill) (types.ConnectorServer, erro
 			Password:     c.Password,
 			DeveloperKey: c.Developerkey,
 		},
+		c.BaseUrl,
 	)
 	if err != nil {
 		l.Error("error creating connector", zap.Error(err))
