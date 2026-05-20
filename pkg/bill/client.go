@@ -75,10 +75,13 @@ func NewClient(httpClient *http.Client, credentials Credentials, baseURL string)
 func (c *Client) Login(ctx context.Context, organizationId string) error {
 	var loginResponse LoginResponse
 
-	// Setup required organization id for client
-	c.OrganizationId = organizationId
+	// Build the request credentials with the target org id without mutating
+	// the client; we only commit the new org/session to c on success so a
+	// failed login does not leave the client half-updated.
+	reqCreds := c.Credentials
+	reqCreds.OrganizationId = organizationId
 
-	err := c.doRequest(ctx, c.usersURL(), &loginResponse, c.Credentials, nil, nil)
+	err := c.doRequest(ctx, c.usersURL(), &loginResponse, reqCreds, nil, nil)
 
 	if err != nil {
 		return err
@@ -88,7 +91,6 @@ func (c *Client) Login(ctx context.Context, organizationId string) error {
 		return status.Error(400, "Request failed")
 	}
 
-	// modify the client credentials to involve new session id and organization id
 	c.SessionId = loginResponse.Data.SessionId
 	c.OrganizationId = loginResponse.Data.OrgId
 
